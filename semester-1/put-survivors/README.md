@@ -37,6 +37,8 @@ Created via [BFXR.net](https://www.bfxr.net/)
 
 No additional setup or dependencies required
 
+or go to this link: [PUT Survivors](https://pkrystian.github.io/put/semester-1/put-survivors/)
+
 ## License
 
 This project is created for educational purposes as part of the PAI course at Politechnika Poznańska.
