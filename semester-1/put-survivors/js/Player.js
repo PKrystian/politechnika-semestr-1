@@ -26,28 +26,30 @@ class Player {
     this.animator = new SpriteAnimator("Vampires3", 1);
   }
 
-  update(keys, gameState) {
+  update(keys, gameState, deltaTime = 1 / 60) {
+    const dt = deltaTime * 60;
+
     let isMoving = false;
     let moveX = 0,
       moveY = 0;
 
     if (keys.ArrowLeft || keys.KeyA) {
-      this.x -= this.speed;
+      this.x -= this.speed * dt;
       moveX = -1;
       isMoving = true;
     }
     if (keys.ArrowRight || keys.KeyD) {
-      this.x += this.speed;
+      this.x += this.speed * dt;
       moveX = 1;
       isMoving = true;
     }
     if (keys.ArrowUp || keys.KeyW) {
-      this.y -= this.speed;
+      this.y -= this.speed * dt;
       moveY = -1;
       isMoving = true;
     }
     if (keys.ArrowDown || keys.KeyS) {
-      this.y += this.speed;
+      this.y += this.speed * dt;
       moveY = 1;
       isMoving = true;
     }
@@ -67,9 +69,10 @@ class Player {
     }
 
     if (this.hurtTimer > 0) {
-      this.hurtTimer--;
-      if (this.hurtTimer === 0) {
+      this.hurtTimer -= dt;
+      if (this.hurtTimer <= 0) {
         this.isHurt = false;
+        this.hurtTimer = 0;
       }
     }
 
@@ -89,7 +92,10 @@ class Player {
     this.animator.update();
 
     if (this.invulnerableTime > 0) {
-      this.invulnerableTime--;
+      this.invulnerableTime -= dt;
+      if (this.invulnerableTime < 0) {
+        this.invulnerableTime = 0;
+      }
     }
 
     const adjustedFireRate = CONFIG.FIRE_RATE / this.attackSpeedMultiplier;

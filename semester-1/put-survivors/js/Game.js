@@ -6,6 +6,8 @@ class Game {
     this.soundManager = new SoundManager();
     this.keys = {};
     this.gameStarted = false;
+    this.lastFrameTime = 0;
+    this.deltaTime = 0;
 
     this.gameState = this.createInitialGameState();
 
@@ -100,7 +102,14 @@ class Game {
     this.showStartModal();
   }
 
-  gameLoop() {
+  gameLoop(currentTime = 0) {
+    if (this.lastFrameTime === 0) {
+      this.lastFrameTime = currentTime;
+    }
+    const rawDelta = currentTime - this.lastFrameTime;
+    this.deltaTime = Math.min(rawDelta, 100) / 1000;
+    this.lastFrameTime = currentTime;
+
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     this.ui.updatePlayerStats(this.gameState.player);
@@ -110,12 +119,12 @@ class Game {
     }
 
     if (!this.gameState.gameOver) {
-      requestAnimationFrame(() => this.gameLoop());
+      requestAnimationFrame((time) => this.gameLoop(time));
     }
   }
 
   updateGame() {
-    this.gameState.player.update(this.keys, this.gameState);
+    this.gameState.player.update(this.keys, this.gameState, this.deltaTime);
 
     this.updateBullets();
 
@@ -123,8 +132,10 @@ class Game {
 
     this.updateExpOrbs();
 
-    this.gameState.enemySpawnCounter++;
-    if (this.gameState.enemySpawnCounter >= CONFIG.ENEMY_SPAWN_RATE) {
+    // spawn every ~0.583 seconds at 60fps
+    const spawnInterval = CONFIG.ENEMY_SPAWN_RATE / 60;
+    this.gameState.enemySpawnCounter += this.deltaTime;
+    if (this.gameState.enemySpawnCounter >= spawnInterval) {
       this.spawnEnemy();
       this.gameState.enemySpawnCounter = 0;
     }
@@ -136,7 +147,7 @@ class Game {
     for (let i = this.gameState.bullets.length - 1; i >= 0; i--) {
       const bullet = this.gameState.bullets[i];
 
-      if (bullet.update(this.canvas)) {
+      if (bullet.update(this.canvas, this.deltaTime)) {
         this.gameState.bullets.splice(i, 1);
         continue;
       }
@@ -160,9 +171,10 @@ class Game {
         this.gameState.player,
         this.gameState.enemies,
         this.gameState,
+        this.deltaTime,
       );
 
-      if (enemy.isDead && enemy.updateDeath(this.gameState)) {
+      if (enemy.isDead && enemy.updateDeath(this.gameState, this.deltaTime)) {
         this.gameState.enemies.splice(i, 1);
         continue;
       }
@@ -180,7 +192,7 @@ class Game {
     for (let i = this.gameState.expOrbs.length - 1; i >= 0; i--) {
       const orb = this.gameState.expOrbs[i];
 
-      if (orb.update(this.gameState.player)) {
+      if (orb.update(this.gameState.player, this.deltaTime)) {
         this.soundManager.playPickup();
         if (
           this.gameState.player.gainExperience(orb.expValue, this.gameState)

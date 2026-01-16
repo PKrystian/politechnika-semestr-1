@@ -29,25 +29,27 @@ class Enemy {
     this.animator = new SpriteAnimator(spriteType, scale);
   }
 
-  update(player, enemies, gameState) {
+  update(player, enemies, gameState, deltaTime = 1 / 60) {
     if (this.isDead) {
-      this.updateDeath(gameState);
+      this.updateDeath(gameState, deltaTime);
       return;
     }
 
-    this.updateMovement(player, enemies);
-    this.updateTimers();
+    this.updateMovement(player, enemies, deltaTime);
+    this.updateTimers(deltaTime);
     this.updateAnimation();
     this.animator.update();
   }
 
-  updateMovement(player, enemies) {
+  updateMovement(player, enemies, deltaTime = 1 / 60) {
+    const dt = deltaTime * 60;
+
     const dx = player.x - this.x;
     const dy = player.y - this.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    const newX = this.x + (dx / distance) * this.speed;
-    const newY = this.y + (dy / distance) * this.speed;
+    const newX = this.x + (dx / distance) * this.speed * dt;
+    const newY = this.y + (dy / distance) * this.speed * dt;
 
     const canMove = !enemies.some((enemy) => {
       if (enemy === this || enemy.isDead) return false;
@@ -67,11 +69,14 @@ class Enemy {
     }
   }
 
-  updateTimers() {
+  updateTimers(deltaTime = 1 / 60) {
+    const dt = deltaTime * 60;
+
     if (this.hurtTimer > 0) {
-      this.hurtTimer--;
-      if (this.hurtTimer === 0) {
+      this.hurtTimer -= dt;
+      if (this.hurtTimer <= 0) {
         this.isHurt = false;
+        this.hurtTimer = 0;
       }
     }
   }
@@ -90,8 +95,10 @@ class Enemy {
     }
   }
 
-  updateDeath(gameState) {
-    this.deathTimer--;
+  updateDeath(gameState, deltaTime = 1 / 60) {
+    const dt = deltaTime * 60;
+
+    this.deathTimer -= dt;
     if (this.deathTimer <= 0) {
       gameState.stats.enemiesKilled++;
       this.spawnExpOrb(gameState);

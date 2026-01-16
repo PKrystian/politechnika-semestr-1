@@ -14,9 +14,10 @@ class Bullet {
     this.radius = 5;
   }
 
-  update(canvas) {
-    this.x += this.dx;
-    this.y += this.dy;
+  update(canvas, deltaTime = 1 / 60) {
+    const dt = deltaTime * 60;
+    this.x += this.dx * dt;
+    this.y += this.dy * dt;
 
     return (
       this.x < 0 ||
@@ -43,7 +44,7 @@ class ExpOrb {
     this.movingToPlayer = false;
   }
 
-  update(player) {
+  update(player, deltaTime = 1 / 60) {
     const dx = player.x - this.x;
     const dy = player.y - this.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
@@ -53,9 +54,10 @@ class ExpOrb {
     }
 
     if (this.movingToPlayer) {
+      const dt = deltaTime * 60;
       const speed = 5;
-      this.x += (dx / distance) * speed;
-      this.y += (dy / distance) * speed;
+      this.x += (dx / distance) * speed * dt;
+      this.y += (dy / distance) * speed * dt;
     }
 
     return distance <= player.radius + this.radius;
